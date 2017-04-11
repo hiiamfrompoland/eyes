@@ -1,0 +1,62 @@
+Power consumptions
+All currents drawn at 3.3V
+
+EM7180 EMSentral	Normal operation	300uA
+			Pass-Through mode	 45uA
+			Standby mode		  7uA
+ref datasheet
+
+ATMega328P 		Full-blown		5160uA
+[Arduino Pro mini]	Reasonable		4600uA
+			Minimal			4160uA
+			Idle			 600uA
+			Standby		   	   7uA
+		
+ref https://www.avrprogrammers.com/howto/atmega328-power
+ref datasheet
+
+Teensy 3.1 uC		Minimal			30mA
+			Full-blown		34mA
+			Very low Power Mode	1.46mA
+			Wait-mode		7.2mA
+
+MPU-9250		Gyroscope 		3.2mA
+			Accelerometer		450uA
+			Accelerometer Low Poewr	9uA
+			Magnetometer		280uA
+
+SDcard			Idle 			2mA
+			Writing			6mA
+
+Bluetooth		Idle			25mA
+			Transmission		50mA
+			Deep Sleep		26uA
+
+Buzzer	
+
+Total minimum current:
+Total reasonable current:
+Battery minimum capacity for 72h:
+Battery reasonable capacity for 72h:
+
+
+Other cool MPUs:
+KL02-48MHz	Reasonable	4.6mA
+
+-------------------------------------------------------
+Measurement 1
+Teensy 3.0 @ 24MHz, openlog + Sentral sensor fusion:
+min: 27mA
+max: 35mA
+average: 31mA
+Expected: 17mA
+
+Minimal battery for 72h: 2200mA
+-------------------------------------------------------
+Measurement 2
+Teensy 3.0 @ 24MHz, openlog, Sentral sensor fusion, but
+no logging or measurements (idle)
+
+Stable: 24.1mA
+Expected 17mA
+

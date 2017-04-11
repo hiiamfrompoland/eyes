@@ -1,0 +1,36 @@
+I have tried to move code interfacing with Sensor Fusion but it seems it's too much for Arduino Pro Mini.
+No surprise actually. I am trying to reduce amount of code necessary, but since we require
+also SDcard, buzzer and preferably BT it might be too much. 
+
+Perhaps we will have to move to other microchip (like, stay with teensy).
+
+So, yes it fits. Even with float arithmetics. Though I had to remove most of the initialization
+code, thus we rather hope that everytime it works (it should) but if something fails we have
+no means of knowing that.
+
+The basic version of the device could work with simply replacing FTDI below with SDcard, 
+but we might try to do better.
+
+Connection diagram: 
+Pro Mini	FTDI		
+BLK		BLK
+GND		CTS
+VCC		3V3
+RXI		TXO
+TXO		RXI
+DTR		GRN
+			Programmer
+VCC			VCC
+GND			GND
+12			MISO
+11			MOSI
+13			SCK
+29			/RST
+					Sensor Fusion
+VCC					VCC
+GND					GND
+A4					SDA
+A5					SCL
+-					INT
+
+Use the code bundled in 03_Arduino_Pro_Mini_Code to have a nice start

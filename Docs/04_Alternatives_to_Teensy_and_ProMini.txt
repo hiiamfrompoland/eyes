@@ -1,0 +1,25 @@
+Both boards are actually few years old, and despite they serve well, it might be worthy
+to consider changing to another system.
+
+Here is few worthy mentioning:
+
+1)  	NUCLEO-L432KC
+	Size of Teensy, very powerful uC with FPU, up to 80MHz, with plenty of I2C and SPIs (awesome!),
+	and power consumption of 84uA/MHz, so at max freq it would be comparable power consumption
+	to Pro Mini with waaaaaay more possibilities.
+
+	And damn, it does have RTC!
+	https://developer.mbed.org/platforms/ST-Nucleo-L432KC/
+
+2) 	mbed HRM1017
+	Nucle board, size of Teensy pretty much, with nRF51822, so built-in BT connectivity.
+	And power consumption of about 2mA with advertasing.
+	I guess there is little processing power, but it is not important.
+ 
+	https://developer.mbed.org/platforms/mbed-HRM1017/
+
+3)	Teensy LC
+	Power consumption about 6mA, 48MHz Cortex-M0+, 128kB flash, 18kB SRAM
+
+4)	Teensy 3.2
+	It's pretty much the same as Teensy 3.0 power-consumption-wise.

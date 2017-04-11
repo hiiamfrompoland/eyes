@@ -1,0 +1,29 @@
+To get started with pro mini the easiest is to follow https://www.arduino.cc/en/Guide/ArduinoProMini
+in particular the option with using FTDI 3V3 board. 
+
+However, this may fail. It is possible that sketch for Arduino won't upload at all. 
+That is because bootloader on the Arduino Pro Mini itself might be missing - it could
+be overwritten by someone or not written in factory to start with. 
+
+If so, then we need to use external programmer. I have tried with USBasp and AVR Pocket Programmer.
+USBasp might have problem that firmware is old enough to fail to communicate. We would have to flash
+new firmware. 
+
+AVR Pocket Programmer, on Windows, requires drivers that you can download here:
+https://github.com/sparkfun/Pocket_AVR_Programmer/tree/master/Drivers
+Plug the device. 
+Actually Windows 7+ might try to download driver by itself, but it's most likely going to fail.
+Then you need to find Device Manager, find your unknown device, right click to update/install new driver.
+Then you will be asked whether to download or to find on computer, you click the second option. And 
+browse to location of downloaded and unzipped driver. Let the installation finish, then unplug and plug device.
+And should be fine!
+
+For Linux, if you are using Linux, you should be smart enough to figure it out on your own in no time.
+
+Now back to Arduino IDE, choose proper board, set programmer to USBtinyISP and Upload using programmer!
+Yay.
+
+If you wish to use some time in future option with programming using FTDI, you can also Tools>Burn Bootloader 
+right now. 
+
+Cheers.

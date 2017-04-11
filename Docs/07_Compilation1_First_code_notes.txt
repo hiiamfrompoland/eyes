@@ -1,0 +1,120 @@
+Compilation1 is first version of code for Teensy 3.0 that is supposed to have
+all the stuff aboard. Here are some minor thoughts and notes about the code.
+
+0 Pin diagram
+
+Teensy		Other stuff
+2		+V [Buzzer]
+GND		-V [Buzzer]
+
+1   Command system
+
+So by typing to DEBUG serial which can be either USB or Bluetooth we can 
+request a command from the device. Command should end with a newline.
+
+    start    
+    Starts taking and loging measurements into currently opened file.
+
+    stop   
+    Stop taking measurements
+
+    reset
+    Resets the teensy device completly. Doesn't work yet :)
+
+    forget
+    In case of blackout teensy tries to remember where the data was put,
+    and would start logging it back to the same file to avoid confussion.
+    This command makes it forget about that fact, so next reset it will 
+    start from scratch
+
+    save
+    saves session parameters to EEPROM
+
+    calibrate
+    Force device to set current level as a reference level
+
+    rm [filename]
+    removes fiven file
+
+    autotest
+    Perform auto-test on the sensor
+
+    dump [measurement ID]
+    Dumps all the data from current measurement (current file) into serial
+    port so you can copy past it from Serial Monitor. As the argument you
+    give ID of measurement you are interested in dumping. 
+    
+    setAlarmLevel [level in degree]
+    By typing eg: setAlarmLevel 20  you will make buzzer buzz in case patient
+    violeted limit of 20 degree
+
+    setSessionName
+    Set ID of current measurement, so you know which is which on SD file.
+    If there is another session with the same name, it will append to it.
+
+    setTime [dd-mm-yyyy hh:mm:ss]
+    Tell teensy what is the real time    
+
+    setAlarmEnabled [true/false]
+    By default alarm is enabled, but we can switch it off with that command,
+    so buzzer won't warn about abuse.
+
+    setPoolingPeriod [time]
+    Sets new measurement pooling time, default is 500ms. 
+    
+    selftest
+    Runs self test routine implemented by [Sentral creator]. Deviation from factory trim
+    larger than about 14% should imply error. Not really sure yet how to interpret that. 
+
+    Therefore nice and valid sequnence to start a measurement would be:
+    1   forget    // just in a case start over
+    2   setSessionName SESSNAME
+    3   setAlarmLevel  LEVEL
+    4   setTime dd-mm-yyyy hh:mm:ss
+    5   calibrate
+    6   save
+    7   start
+    Such sequence will create really nice and sweet output.
+    
+    On the other hand we can always just go with
+    1   start
+    2   start
+    To start measurement straight away. You will have your measurement in default.log,
+    the first row would be pretty much the reference point you can substract in post-process,
+    and the rest you can just note down.
+    
+    
+2   File format
+    Each line start with capital letter indictaing what is the data saved.
+
+    M    measurement was taken
+	 after first tab there is timestamp (miliseconds since start of the measurement)
+	 then, separated by space, are quaternions, accelerometer data, gyroscope data and magnetometer data
+	 M	time	Qx	Qy	Qz	Qw	Ax	Ay	Az	Gx	Gy	Gz	Mx	My	Mz
+         Quaternions are with respect to orginal coordinates of the sensor, find relative quaternions is done 
+         in post processing.
+
+    C    calibration was set
+         first there is timestamp, then separated by space, is reference quaternion
+         C	time	Qx	Qy	Qz	Qw
+
+    I    system start from scratch
+	 after each space, there are as follows:
+	 - timestamp (miliseconds since start)
+         - current session name (up to 8 chars)
+	 - timestamp from RTC (seconds since 1.I.1970)
+	 I	time	SESS_NAME	rtc
+
+    E    error report
+         E	time	ERROR REPORT
+
+    It is so to keep chronology of events. 
+    
+3   Quaternions, references and buzzers
+    
+    When calibrating/taking reference of some position, we save quaternion for that (q_ref) and then
+    also calculate inverse of it and (q_ref_inv = conj(q_ref)/norm(q_ref)).
+    Then, during each masurement we take quaternion from Sentral (q_raw) and we calculate difference
+    between it and reference one, thus:  q = q_ref_inv * q_raw
+    Result is translated into pitch. 
+    We see. 

@@ -1,0 +1,55 @@
+Briefly hook-up:
+
+Teensy		OpenLog
+VCC		3V3
+GND		GND
+GND		BLK
+12		GRN
+10		RX-I
+9		TX-O
+
+GRN is nice to have connected to some digital output. We should keep it high, when we want
+to reset it we should pull it down. 
+------------------------------------------------------------------------------------------
+I had problem to enter command mode from the code, it's nice to have some sort of delay:
+
+  SDserial.begin(9600);
+  while(!SDserial.available());
+  
+  SDserial.write((char)26);
+  SDserial.write((char)26);
+  SDserial.write((char)26);
+
+As above, when we setup connection we should wait until OpenLog responds with 12<
+Then we can enter command mode. 
+
+In arduino serial terminal we need to use carriage return to send commmands.
+
+------------------------------------------------------------------------------------------
+
+Dump of data from 72h would take forever using 9600 baudrate, thus we changed config and 
+set it to 
+57600,26,3,1,1,0,0
+which is:
+baud 57600
+escape char 26
+no of ecs chars 3
+mode 1 is sequential log, perhaps its worthy to set it to 2 (cmd mode)
+verb 0 so no extensive messages from openlog
+echo is 0 so it doesn't echo back what we put into cmd mode
+ignoreRX is 0 so we can always reset openlog by pulling RX on startup to ground
+
+It is worthy considering setting mode to 2, so it will start in cmd mode
+always. 
+
+------------------------------------------------------------------------------------------
+
+Some final thoughs:
+1   As far as it is nice to hook up and pretend it's just serial port its' fine. But
+    as we want bit more control over what is happening it's bit of a pain to work 
+    with it. 
+    So I would suggest just directly operating on SDcard. That will also save us 
+    up to 6mA@3.3V of power.
+2   I had a problem with saving data sapareted by tab \t. Saving was fine, but 
+    reading using "read" command to openlog returned data where every tab was
+    replaced with a space

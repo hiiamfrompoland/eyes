@@ -1,0 +1,27 @@
+We have nice and easy BT module Bluetooth Mate Gold. It's actually more like
+serial bridge over Bluetooth. What is nice because it's easy. 
+
+I tried the module with Teensy 3.0. 
+What I learned:
+	1) sparkfun recommends to change baudrate to 9600 between BT and Teensy,
+	though I found that actually 115200 works better. To be honest I could
+	get it to work with baudrate 9600
+
+	2) Also I had problem with Serial2 on Teensy, thus I settled on using Serial1
+
+	3) Windows (and maybe linux also) may see two com ports due to one connected BT
+	device. In my case, the real one turned out to be the second one, not the first
+	one. I don't know reason for that.
+
+Thus connection is as easy as it gets:
+
+Teensy		Bluetooth
+0		TX-I
+1		RX-O
+3.3V		VCC
+GND		GND
+-		RTS-O (floating)
+-		CTS-I (floating)
+
+BTW1	For playing with few serial monitors open on Windows I recommend YAT software, it's
+	really really nice

@@ -1,0 +1,4 @@
+Apparentely all we have to do to enable RTC on Teensy is to plug
+32.768kHz 12.5pF crystal on designed positoin and enjoy it. 
+
+Seems also that teensy code uploader thing synchronizes clock.
