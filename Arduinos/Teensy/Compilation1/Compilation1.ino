@@ -389,7 +389,8 @@ void loop() {
   }
 
   float pitch = -asin(2.0f * (Quat[0] * Quat[2] - Quat[3] * Quat[1])) * 180.0f / 3.14f;
-
+  float yaw  = atan2(2.0f * (Quat[0] * Quat[1] + Quat[2] * Quat[3]), Quat[0] * Quat[0] - Quat[1] * Quat[1] - Quat[2] * Quat[2] + Quat[3] * Quat[3]) * 180.0f / 3.14f;
+  float roll = atan2(2.0f * (Quat[1] * Quat[2] + Quat[0] * Quat[3]), Quat[0] * Quat[0] + Quat[1] * Quat[1] - Quat[2] * Quat[2] - Quat[3] * Quat[3]) * 180.0f / 3.14f;   
   // if alarm anabled, do alarm stuff
   if(SessionSet & SESSION_ALARM_EN)
   {
@@ -437,6 +438,8 @@ void loop() {
 #ifdef doDebug
   DEBUG.print("Pitch:  ");
   DEBUG.print(pitch);
+  DEBUG.print(" Roll:  ");
+  DEBUG.print(roll);
   DEBUG.print(" QUAT:  ");
   DEBUG.print(Quat[0]);
   DEBUG.print(" ");
@@ -445,8 +448,6 @@ void loop() {
   DEBUG.print(Quat[2]);
   DEBUG.print(" ");
   DEBUG.print(Quat[3]);
-  DEBUG.print(" Norm: ");
-  DEBUG.print(quatNorm(Quat));
   DEBUG.print(" Timestamp: ");
   DEBUG.println(millis());
 #endif

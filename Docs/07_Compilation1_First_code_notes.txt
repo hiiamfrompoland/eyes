@@ -7,6 +7,21 @@ Teensy		Other stuff
 2		+V [Buzzer]
 GND		-V [Buzzer]
 
+Teensy		OpenLog
+VCC		3V3
+GND		GND
+GND		BLK
+12		GRN
+10		RX-I
+9		TX-O
+
+Teensy		Sentral
+VDD		3V3
+SDA		17
+SCL		16
+GND		GND
+INT		-
+
 1   Command system
 
 So by typing to DEBUG serial which can be either USB or Bluetooth we can 

@@ -1,0 +1,27 @@
+This tiny pcb houses bq24302a chip which has power path managment and battery charging 
+functionality.
+Having this we are saving people pain of connecting/disconnecting battery, we ensure
+continuity of operation and we are able to sustain real time clock. I think it's worthy
+
+Chip has quite some options and for sake of completness most of them are available, thus
+it might cause bit of pain when getting it work. Here is few notes:
+
+1) If you are certain that you don't need thermistor to measure battery's temperature,
+   then you need 10kOhm resistors on P_TEMP port.
+
+   Though watch out with these fockers, they tend to not have insulation on wires. If you 
+   short them charging won't be possible.
+
+2) Control signals (PSEL, ISET2, CE) have on PCB resistors footprints allowing to pull/push
+   them to GND or VUSB. If USB is not present, the one pulled high will obviously float.
+   But no worries, they only control logic responsible for USB/AC charging, thus
+   no bad should happen.
+   I actually expect inputs on chip to have pull ups/downs to set them to default configuration
+   when not conntected. Hopefully.
+
+3) 
+
+
+Since there is always something to improve, here is such TODO list:
+1) After all, larger holes for connectors
+2) Main chip easily can have smaller footprint 
