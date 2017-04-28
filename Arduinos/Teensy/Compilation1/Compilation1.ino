@@ -29,6 +29,8 @@
 #define LED_PIN   13
 // i2c from sensor reset pin
 #define INT_PIN   8
+// button pin
+#define BTN_PIN   3
 // buzzer pin
 #define BUZ_PIN   2
 // buzzer tone
@@ -100,6 +102,12 @@ float alarmLevel;
 uint32_t poolingPeriod = 500;
 
 /**
+ * Buttons and interrupts functions
+ */
+ 
+uint8_t   buttonCounter = 0;
+
+/**
  * Logs an error to the session file
  */
 inline void errorLog(String e)
@@ -136,6 +144,8 @@ void setup() {
 
   // SENTRAL interrup pin
   pinMode(INT_PIN, INPUT);
+  
+  pinMode(BTN_PIN, INPUT);
 
   // Setup for Master mode, pins 16/17, external pullups, 400kHz for Teensy 3.1
   Wire.begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400);
@@ -329,6 +339,86 @@ void setup() {
 
 }
 
+/**
+ * Interrupt on button long press (>10s) forcing teensy to reset to zero
+ * Sygnalized by diode blinking for next 5s. Wait for diode to go dark.
+ * Short press (2s) is taking first, then second calibration, then starting (or stopping)
+ * Each step is sygnalized by diode blinking once, two times and three times.
+ */
+void int1()
+{  
+    if (digitalRead(BTN_PIN)==LOW)
+    {
+      return;
+    }
+
+    // reset led, start measuring press time
+    digitalWrite(LED_PIN, LOW);
+    uint32_t  buttonPressed = millis();
+
+    // check if button is kept for 10s
+    while(digitalRead(BTN_PIN)==HIGH);
+    
+    uint32_t dTime = (millis()-buttonPressed > 10000);
+
+    if(dTime > 10000)
+    {
+      // 10s, reset
+      cmdStop();
+      cmdForget();
+      buttonCounter = 0;
+      digitalWrite(LED_PIN, HIGH);
+      delay(5000);
+      digitalWrite(LED_PIN, LOW);
+    }
+    else if(dTime > 2000)
+    {
+      // first short press
+      if(buttonCounter == 0)
+      {
+        cmdCalibrate1();
+        buttonCounter = 1;
+        digitalWrite(LED_PIN, HIGH);
+        delay(250);
+        digitalWrite(LED_PIN, LOW);
+      } 
+      else if(buttonCounter == 1)
+      {
+        // second short press
+        cmdCalibrate2();
+        buttonCounter = 2;
+        digitalWrite(LED_PIN, HIGH);
+        delay(250);
+        digitalWrite(LED_PIN, LOW);
+        delay(250);
+        digitalWrite(LED_PIN, HIGH);
+        delay(250);
+        digitalWrite(LED_PIN, LOW);
+      }
+      else if(buttonCounter == 2)
+      {
+        // third short press
+        if(doRun) {
+          cmdStop();
+        }
+        else
+        {
+          cmdStart();
+          cmdStart();
+        }
+        digitalWrite(LED_PIN, HIGH);
+        delay(250);
+        digitalWrite(LED_PIN, LOW);
+        delay(250);
+        digitalWrite(LED_PIN, HIGH);
+        delay(250);
+        digitalWrite(LED_PIN, LOW);
+      }
+      
+      
+    }
+   
+}
 
 void loop() {
 
@@ -336,14 +426,21 @@ void loop() {
   // -----------------------------------------------------------------------------------------------
   // if initialization failed, do nothing
   if (!initSuccess) {
-  //  delay(1000);
-  //  return;
+    delay(1000);
+    return;
   }
+
+  // if button pressed
+//  if (digitalRead(BTN_PIN)==HIGH)
+//  {
+//    int1();
+//  }
 
   // First of all - always check for incoming commands
   // need to check if this won't make BT wake up
   if (DEBUG.available())
   {
+    digitalWrite(LED_PIN, LOW);
     readCmd();
   }
 

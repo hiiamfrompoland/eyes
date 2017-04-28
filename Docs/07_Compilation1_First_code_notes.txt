@@ -6,6 +6,8 @@ all the stuff aboard. Here are some minor thoughts and notes about the code.
 Teensy		Other stuff
 2		+V [Buzzer]
 GND		-V [Buzzer]
+3		Button+
+VCC		Button-
 
 Teensy		OpenLog
 VCC		3V3
@@ -137,3 +139,20 @@ request a command from the device. Command should end with a newline.
     between it and reference one, thus:  q = q_ref_inv * q_raw
     Result is translated into pitch. 
     We see. 
+
+4   Buttons
+    
+    There is code, for the moment being disabled (as we don't have a button).
+    Though the scheme is:
+
+    - Long Press >10s     : reset the device, so wipe calibration data and start new session basically
+    - Short Press 2s-10s  : 	first press:	take first calibration
+				second press:	take second calibration
+				third press: 	start device
+				fourth press:	stop device
+				fifth press:	start device
+				...
+    Reseting is confirmed by LED lit for 5s.
+    First short press is confirmed with one blink
+    Second short press is confirmed with two blinks
+    All the rest is confirmed with three blinks
