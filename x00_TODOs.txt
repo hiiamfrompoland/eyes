@@ -1,0 +1,15 @@
+1	Implement functions on teensy side for
+	a	clearing sd
+
+2	Replace openlog with something normal like just a SD card
+
+3	Get RTC to work
+
+4	Get Buzzer to work finally
+
+5	Verify accuracy of the device measurement
+
+6	Find out if selftest result is anyhow our concern
+
+7	Of great use would a button to turn on/off actually the device completly. 
+        For instance something like 40mA capable switch between Battery Manager output to VIN to Teensy.

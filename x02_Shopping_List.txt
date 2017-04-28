@@ -1,0 +1,19 @@
+What				Code		Qty
+-----------------------------------------------------		
+Battery chip			1754753		6
+Headers Straight 2.54mm		1593423		5
+Crystal for RTC			1457084 	10
+Crystal for RTC (another)	2101344		10
+Thermistors			2492886		30
+Resistor 0Ohm			2309106		100
+	 1K6			2379974		100	
+	 16K			2059634		100
+	 37K			2138461		100
+	 10K			2447230		100
+Buttons fun			1656428		5
+				9471677		5
+				1656425		5
+Audio cable			2470995		5
+
+okey audio cable
+http://amzn.eu/fdZuS15

@@ -1,0 +1,34 @@
+What would be nice to have from Farnell:
+
+What				Code		Qty
+-----------------------------------------------------		
+Nucleo				2580786		1
+
+Headers Right Angle 2.54mm	1593437		5
+Headers Straight 2.54mm		1593423		5
+micro SD socket			2666772		2
+
+Jumper wire F2F			2452748		5
+Jumper wire M2F			2452749		5
+Jumper Wire M2M			2452750		5
+
+Battery connector		9492615		20
+
+Real Time Clock			2515358		2
+
+Battery Managment IC		1754753		2
+Battery Managment IC		2516725		2
+A diode just in case		1467550		20
+Cap 0.1uF			9406204		100
+Cap 0.22uF			2627437		100
+Cap 1uF				1759408		100
+Cap 10uF			2688517		20
+
+-------------------------------------------------------
+
+What would be nice to have from Pesky Productions
+EM7180 SENtral Sensor Hub + 9 DoF Motion Sensor
+
+I think would be good to have few extra lying around 
+just in case. And in the end they will be used anyway.
+
