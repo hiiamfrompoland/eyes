@@ -11,7 +11,7 @@ Teensy		OpenLog
 VCC		3V3
 GND		GND
 GND		BLK
-12		GRN
+11		GRN
 10		RX-I
 9		TX-O
 
@@ -109,7 +109,11 @@ request a command from the device. Command should end with a newline.
          Quaternions are with respect to orginal coordinates of the sensor, find relative quaternions is done 
          in post processing.
 
-    C    calibration was set
+    C1   calibration was set (frist calibration)
+         first there is timestamp, then separated by space, is reference quaternion
+         C	time	Qx	Qy	Qz	Qw
+
+    C2   calibration was set (secondcalibration)
          first there is timestamp, then separated by space, is reference quaternion
          C	time	Qx	Qy	Qz	Qw
 

@@ -491,7 +491,7 @@ $EndComp
 Wire Wire Line
 	6550 4600 6550 4550
 Text Notes 2700 2700 0    60   ~ 0
-R_SET = 1070 \Ohm\nR_TMR = 60k \Ohm\nR_DPPM = 37.7k \Ohm\n\nThese can be not populated, or:\nR_CE = 10kOhm, Chip Enabled if USB present\nR_PSEL  = 10kOhm, USB is primary source\nR_ISET2 = charge current for battery from USB, populate this one with 10kOhm to set 100mA\nR_ISET2H = or this one to set 500mA
+R_SET = 1070 \Ohm [def charging current, R_SET = 2.5V * 450 / I_CHARG\nR_TMR = 60k \Ohm [time after which charging terminates for safety, ]\nR_DPPM = 37.7k \Ohm []\n\nThese can be not populated, or:\nR_CE = 0Ohm, Chip Enabled if USB present\nR_PSEL  = 0Ohm, USB is primary source\nR_ISET2 = charge current for battery from USB, populate this one with 0Ohm to set 100mA\nR_ISET2H = or this one to set 500mA
 $Comp
 L C_Small C2
 U 1 1 58D37FD9

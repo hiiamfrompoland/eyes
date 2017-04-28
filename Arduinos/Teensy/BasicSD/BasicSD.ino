@@ -43,6 +43,8 @@ void loop()
       SDserial.write((char)26);
     } else {
       SDserial.print(c);
+      Serial.print(c);
     }
   }
 }
+

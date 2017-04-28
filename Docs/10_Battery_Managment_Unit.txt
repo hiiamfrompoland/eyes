@@ -22,6 +22,17 @@ it might cause bit of pain when getting it work. Here is few notes:
 3) 
 
 
+------------------------------------------------------------------------------------------------
+
+I have done test of this device, and seems to work fine. It smoothly changes supply between
+battery and USB. Tests were done with 5V power supply plugged as USB source, 370Ohm resistor 
+plugged as a load for output. 
+Battery was practically full when I did tests, so the charging test was limited. 
+Nevertheless after a while the circuit started charging the battery with about 45mA and slowly
+dropping to 0mA (fully charged I guess).
+
+------------------------------------------------------------------------------------------------
+
 Since there is always something to improve, here is such TODO list:
 1) After all, larger holes for connectors
 2) Main chip easily can have smaller footprint 

@@ -38,10 +38,11 @@
 #define SESS_ON_ADDR    0x048
 #define SESS_ON             1   // if there was a session already set up or are we starting something new          
 #define SESS_NAME_SET       2   // if in EEPROM there is name for sesison or should use default.log
-#define SESS_CALIBRATED     4   // if in EEPROM there are reference quaternions
-#define SESS_ALARM_SET      8   // if in EEPROM there is alarm level saved
-#define SESS_POOLING_SET   16   // if custom pooling period was set
-#define SESS_ALARM_EN      32   // if alarm is enabled
+#define SESS_CALIBRATED1     4   // if in EEPROM there are reference quaternions
+#define SESS_CALIBRATED2     8   // if in EEPROM there are reference quaternions
+#define SESS_ALARM_SET      16   // if in EEPROM there is alarm level saved
+#define SESS_POOLING_SET   32   // if custom pooling period was set
+#define SESS_ALARM_EN      64   // if alarm is enabled
 
 // EEPROM address of a session name of current measurement
 #define SESS_SESSION_NAME_ADDR   0x050   // 8 bytes
@@ -55,6 +56,14 @@
 #define SESS_INIT_Q3_ADDR        0x76    // 4 bytes, float
 // EEPROM address of 4th component of quaternions of initial position
 #define SESS_INIT_Q4_ADDR        0x80    // 4 bytes, float
+// EEPROM address of 1st component of quaternions of initial position
+#define SESS_INIT_Q5_ADDR        0x84    // 4 bytes, float
+// EEPROM address of 2nd component of quaternions of initial position
+#define SESS_INIT_Q6_ADDR        0x88    // 4 bytes, float
+// EEPROM address of 3rd component of quaternions of initial position
+#define SESS_INIT_Q7_ADDR        0x92    // 4 bytes, float
+// EEPROM address of 4th component of quaternions of initial position
+#define SESS_INIT_Q8_ADDR        0x96    // 4 bytes, float
 // EEPROM address of period between measurements
 #define SESS_POOLING_ADDR        0x84    // 4 bytes, uint32
 
@@ -72,15 +81,18 @@ String SessionName;
 uint8_t SessionSet = 0;
 #define SESSION_FORCED      1 // if stubborn to proceed without setting
 #define SESSION_NAME_SET    2 // if the name/id was set, bit 1
-#define SESSION_CALIBRATED  4 // if reference point was taken
-#define SESSION_ALARM_SET   8 // if alarm level was set
-#define SESSION_POOLING_SET   16 // if custom pooling period was set
-#define SESSION_ALARM_EN      32   // if alarm is enabled
+#define SESSION_CALIBRATED1  4 // if reference point was taken
+#define SESSION_CALIBRATED2  8 // if 2nd reference point was taken
+#define SESSION_ALARM_SET   16 // if alarm level was set
+#define SESSION_POOLING_SET   32 // if custom pooling period was set
+#define SESSION_ALARM_EN      64   // if alarm is enabled
 #define SESSION_EEPROMED    128   // if saved in EEPROM
 
 // reference quaternions (representing head at null position), and it's conjugate
-float refQuat[4];
-float refQuatInv[4];
+float refQuat1[4];
+float refQuat1Inv[4];
+float refQuat2[4];
+float refQuat2Inv[4];
 float rawQuat[4];
 // Alarm level
 float alarmLevel;
@@ -105,10 +117,14 @@ inline void errorLog(String e)
 
 void setup() {
   // setup default variables
-  refQuat[0] = 0.0f;
-  refQuat[1] = 0.0f;
-  refQuat[2] = 0.0f;
-  refQuat[3] = 1.0f;
+  refQuat1[0] = 0.0f;
+  refQuat1[1] = 0.0f;
+  refQuat1[2] = 0.0f;
+  refQuat1[3] = 1.0f;
+  refQuat2[0] = 0.0f;
+  refQuat2[1] = 0.0f;
+  refQuat2[2] = 0.0f;
+  refQuat2[3] = 1.0f;
 
   SessionName = "default.log";
 
@@ -203,49 +219,91 @@ void setup() {
       DEBUG.println(poolingPeriod);
     }
     // read reference quaternions
-    if (eeSess & SESS_CALIBRATED)
+    if (eeSess & SESS_CALIBRATED1)
     {
-      EEPROM.get(SESS_INIT_Q1_ADDR, refQuat[0]);
-      EEPROM.get(SESS_INIT_Q2_ADDR, refQuat[1]);
-      EEPROM.get(SESS_INIT_Q3_ADDR, refQuat[2]);
-      EEPROM.get(SESS_INIT_Q4_ADDR, refQuat[3]);
+      EEPROM.get(SESS_INIT_Q1_ADDR, refQuat1[0]);
+      EEPROM.get(SESS_INIT_Q2_ADDR, refQuat1[1]);
+      EEPROM.get(SESS_INIT_Q3_ADDR, refQuat1[2]);
+      EEPROM.get(SESS_INIT_Q4_ADDR, refQuat1[3]);
 
-      float refQuatConj[4];
-      quatConj(refQuat, refQuatConj);
+      float refQuat1Conj[4];
+      quatConj(refQuat1, refQuat1Conj);
 
-      float norm = quatNorm(refQuatConj);
-      refQuatInv[0] = refQuatConj[0] / norm;
-      refQuatInv[1] = refQuatConj[1] / norm;
-      refQuatInv[2] = refQuatConj[2] / norm;
-      refQuatInv[3] = refQuatConj[3] / norm;
+      float norm = quatNorm(refQuat1Conj);
+      refQuat1Inv[0] = refQuat1Conj[0] / norm;
+      refQuat1Inv[1] = refQuat1Conj[1] / norm;
+      refQuat1Inv[2] = refQuat1Conj[2] / norm;
+      refQuat1Inv[3] = refQuat1Conj[3] / norm;
       #ifdef doDebug
       DEBUG.println("EEPROM: loaded calibrated data");
-      DEBUG.print(refQuat[0]);
+      DEBUG.print(refQuat1[0]);
       DEBUG.print(" ");
-      DEBUG.print(refQuat[1]);
+      DEBUG.print(refQuat1[1]);
       DEBUG.print(" ");
-      DEBUG.print(refQuat[2]);
+      DEBUG.print(refQuat1[2]);
       DEBUG.print(" ");
-      DEBUG.println(refQuat[3]);
+      DEBUG.println(refQuat1[3]);
       #endif
 
-      SDserial.print("C ");
+      SDserial.print("C1 ");
       SDserial.print(millis());
       SDserial.print(" ");
-      SDserial.print(refQuat[0]);
+      SDserial.print(refQuat1[0]);
       SDserial.print(" ");
-      SDserial.print(refQuat[1]);
+      SDserial.print(refQuat1[1]);
       SDserial.print(" ");
-      SDserial.print(refQuat[2]);
+      SDserial.print(refQuat1[2]);
       SDserial.print(" ");
-      SDserial.println(refQuat[3]);
+      SDserial.println(refQuat1[3]);
       SDserial.flush();
 
-      SessionSet |= SESSION_CALIBRATED;
+      SessionSet |= SESSION_CALIBRATED1;
       DEBUG.print("EEPROM: loaded alarm level: ");
       DEBUG.println(alarmLevel);
     }
+    // read reference quaternions
+    if (eeSess & SESS_CALIBRATED2)
+    {
+      EEPROM.get(SESS_INIT_Q5_ADDR, refQuat2[0]);
+      EEPROM.get(SESS_INIT_Q6_ADDR, refQuat2[1]);
+      EEPROM.get(SESS_INIT_Q7_ADDR, refQuat2[2]);
+      EEPROM.get(SESS_INIT_Q8_ADDR, refQuat2[3]);
 
+      float refQuat2Conj[4];
+      quatConj(refQuat2, refQuat2Conj);
+
+      float norm = quatNorm(refQuat2Conj);
+      refQuat2Inv[0] = refQuat2Conj[0] / norm;
+      refQuat2Inv[1] = refQuat2Conj[1] / norm;
+      refQuat2Inv[2] = refQuat2Conj[2] / norm;
+      refQuat2Inv[3] = refQuat2Conj[3] / norm;
+      #ifdef doDebug
+      DEBUG.println("EEPROM: loaded calibrated data");
+      DEBUG.print(refQuat2[0]);
+      DEBUG.print(" ");
+      DEBUG.print(refQuat2[1]);
+      DEBUG.print(" ");
+      DEBUG.print(refQuat2[2]);
+      DEBUG.print(" ");
+      DEBUG.println(refQuat2[3]);
+      #endif
+
+      SDserial.print("C2 ");
+      SDserial.print(millis());
+      SDserial.print(" ");
+      SDserial.print(refQuat2[0]);
+      SDserial.print(" ");
+      SDserial.print(refQuat2[1]);
+      SDserial.print(" ");
+      SDserial.print(refQuat2[2]);
+      SDserial.print(" ");
+      SDserial.println(refQuat2[3]);
+      SDserial.flush();
+
+      SessionSet |= SESSION_CALIBRATED2;
+      DEBUG.print("EEPROM: loaded alarm level: ");
+      DEBUG.println(alarmLevel);
+    }
     // since everything was rad from EEPROM, flag it's synced
     SessionSet |= SESSION_EEPROMED;
 
@@ -278,8 +336,8 @@ void loop() {
   // -----------------------------------------------------------------------------------------------
   // if initialization failed, do nothing
   if (!initSuccess) {
-    delay(1000);
-    return;
+  //  delay(1000);
+  //  return;
   }
 
   // First of all - always check for incoming commands
@@ -373,10 +431,11 @@ void loop() {
     readSENtralQuatData(rawQuat);
 
     // if there is reference quaternion, do stuff
-    if (SessionSet & SESSION_CALIBRATED)
+    if (SessionSet & SESSION_CALIBRATED1 & SESSION_CALIBRATED2)
     {
       // substract reference quaternion to find relative quaternion
-      quatProd(refQuatInv, rawQuat, Quat);
+      quatProd(refQuat2Inv, rawQuat, Quat);
+      quatProd(refQuat1Inv, rawQuat, Quat);
       // alarm level detection
     }
     else
@@ -386,6 +445,8 @@ void loop() {
       Quat[2] = rawQuat[2];
       Quat[3] = rawQuat[3];
     }
+    // toggle LED as indicator of measurement taken
+    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
   }
 
   float pitch = -asin(2.0f * (Quat[0] * Quat[2] - Quat[3] * Quat[1])) * 180.0f / 3.14f;

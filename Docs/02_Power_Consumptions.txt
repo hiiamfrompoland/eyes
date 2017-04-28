@@ -57,6 +57,6 @@ Measurement 2
 Teensy 3.0 @ 24MHz, openlog, Sentral sensor fusion, but
 no logging or measurements (idle)
 
-Stable: 24.1mA
+Stable: 24.1mA /- 4mA for sensor fusion
 Expected 17mA
 

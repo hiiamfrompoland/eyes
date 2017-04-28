@@ -1,0 +1,24 @@
+So there is this orange thingy that holds all small pcb's battery and everything alltogether.
+It's quite nice for the moment being I think, though I believe better would be in future to
+move everything on single PCB rendering this holster obsolete.
+
+Though if you are determined to keep it, then there is few things I think need to be improved:
+1) I didn't spend much time thinking how to guide wires between pcb, right now it's mess. 
+   They must be carried in much smarter manner.
+   
+2) Battery Managment PCB has wires soldered after putting into place, that is not good. 
+   If you solder before putting, then it's not possible to slide it into slot.
+   Either change PCB design or change holster design to resolve that.
+
+3) Distance between two parallel pcb's can be reduced. 
+
+4) In general 3d printing on Zortrax gives quite solid and durable forms, so all walls/beams
+   /supports can be thinned a bit to save on space
+
+5) Notch for PCB's is perhaps too deep. PCB solder points are not exposed that well because of them
+
+6) It's missing place to put a button
+
+7) Wires are way to dangly
+
+8) Perhaps it would be nice to house battery connector

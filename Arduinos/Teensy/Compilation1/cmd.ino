@@ -1,4 +1,368 @@
+/**
+ * Command functions will will usualy have header as:
+ * void cmdCommandName()
+ * if they accept arguments then
+ * void cmdCommandName(String* args, uint8_t argn)
+ * where args is list of arguments (Strings) and argn is number of arguments
+ */
+void cmdStart()
+{
+    // if all was set or it's second time we ask for start
+    if (((SessionSet & SESSION_NAME_SET)&& (SessionSet & SESSION_CALIBRATED1) && (SessionSet &  SESSION_CALIBRATED2)) || (SessionSet & SESSION_FORCED))
+    {
+      // start measurement
+      doRun = true;
+      DEBUG.println("CMD: measurement start");
+    }
+    else
+    {
+      DEBUG.println("CMD: name/calibration not set yet, type start to proceed or set missing properties");
+      SessionSet |= SESSION_FORCED;
+    }
+}
+void cmdStop()
+{
+    doRun = false;
+    DEBUG.println("CMD: measurement stop");
+}
+void cmdSetTime(String* args, uint8_t argn)
+{
+    // synchronize RTC clock by providing data as dd/mm/yyyy
+    if (argn < 2) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    // parse HH:mm:ss and dd/mm/yyyy to timestamp
+    // and synchronize RTC
 
+}
+void cmdSetTimestamp(String* args, uint8_t argn)
+{
+    // syncrhonize RTC clock by providing data as a timestamp
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    // synchronize RTC
+    uint32_t stamp = (args[0]).toInt();
+    syncRTC((time_t) stamp); 
+    DEBUG.println("CMD: new timestamp set");
+}
+
+void cmdReturnTimestamp()
+{
+    // display timestamp back
+    DEBUG.print("CMD: current time ");
+    DEBUG.println(now());
+}
+void cmdReturnTime()
+{
+    // return current time in nice format
+    DEBUG.print("CMD: current time ");
+    DEBUG.print(hour());
+    DEBUG.print(":");
+    DEBUG.print(minute());
+    DEBUG.print(":");
+    DEBUG.print(second());
+    DEBUG.print(" ");
+    DEBUG.print(day());
+    DEBUG.print("/");
+    DEBUG.print(month());
+    DEBUG.print("/");
+    DEBUG.println(year());
+}
+void cmdSetSessionName(String* args, uint8_t argn)
+{
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    // set the name/id of current measurement so it's easier to find on sd disk
+    SessionName = args[0];
+    SessionSet &= ~SESSION_EEPROMED;
+
+    SDappend(SessionName);
+    SDserial.print("I ");
+    SDserial.print(millis());
+    SDserial.print(" ");
+    SDserial.println(SessionName);
+
+
+    DEBUG.print("CMD: new session name: ");
+    DEBUG.println(SessionName);
+}
+void cmdSetAlarmLevel(String* args, uint8_t argn)
+{
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    // set level of the alarm
+    alarmLevel = (args[0]).toFloat();
+    SessionSet &= ~SESSION_EEPROMED;
+    DEBUG.print("CMD: new alarm level: ");
+    DEBUG.println(alarmLevel);
+}
+void cmdSetAlarmEnabled(String* args, uint8_t argn)
+{
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    if ( (args[0]).equals("true") )
+    {
+      SessionSet |= SESSION_ALARM_EN;
+      DEBUG.print("CMD: alarm enabled");
+    } 
+    else 
+    {
+      SessionSet &= ~SESSION_ALARM_EN;
+      DEBUG.print("CMD: alarm disabled");
+    }
+}
+void cmdSetPoolingPeriod(String* args, uint8_t argn)
+{
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    // set level of the alarm
+    poolingPeriod = (args[0]).toInt();
+    SessionSet &= ~SESSION_EEPROMED;
+    SessionSet |= ~SESSION_POOLING_SET;
+    DEBUG.print("CMD: new pooling period: ");
+    DEBUG.println(poolingPeriod);
+}
+void cmdSave()
+{
+  
+    // save session name
+    struct {
+      char n[9];
+    } sessname;
+    SessionName.toCharArray(sessname.n, 9);
+    sessname.n[8] = 0;
+    EEPROM.put(SESS_SESSION_NAME_ADDR, sessname);
+
+    // save reference quaternions
+    EEPROM.put(SESS_INIT_Q1_ADDR, refQuat1[0]);
+    EEPROM.put(SESS_INIT_Q2_ADDR, refQuat1[1]);
+    EEPROM.put(SESS_INIT_Q3_ADDR, refQuat1[2]);
+    EEPROM.put(SESS_INIT_Q4_ADDR, refQuat1[3]);
+    // save reference quaternions
+    EEPROM.put(SESS_INIT_Q5_ADDR, refQuat2[0]);
+    EEPROM.put(SESS_INIT_Q6_ADDR, refQuat2[1]);
+    EEPROM.put(SESS_INIT_Q7_ADDR, refQuat2[2]);
+    EEPROM.put(SESS_INIT_Q8_ADDR, refQuat2[3]);
+
+    // save alarm level
+    EEPROM.put(SESS_ALARM_LEVEL_ADDR, alarmLevel);
+    
+    // save pooling period
+    EEPROM.put(SESS_POOLING_ADDR, poolingPeriod);
+
+    // save flags
+    EEPROM.put(SESS_ON_ADDR, SESS_ON | SESS_NAME_SET | SESS_CALIBRATED1 | SESS_CALIBRATED2 | SESS_ALARM_SET | SESS_POOLING_SET);
+
+    SessionSet |= SESSION_EEPROMED;
+    DEBUG.println("CMD: session saved to EEPROM");
+}
+void cmdForget()
+{
+    // forget the session so during next reset it will start from scratch
+    doRun = false;
+    EEPROM.write(SESS_ON_ADDR, 0x00);
+    SessionSet = 0;
+    DEBUG.println("CMD: session forgotten");
+}
+void cmdDump(String* args, uint8_t argn)
+{
+    // Just dump all the data from measurement into a DEBUG stream
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    if (argn == 3) {
+      uint32_t start = (args[1]).toInt();
+      uint32_t stop = (args[2]).toInt();
+      SDdump2(args[0], start, stop);
+      return;
+    } 
+    else 
+    {
+      SDdump(args[0]);
+    }
+    
+    // set hi speed baudrate to receive loads of data
+    //SDsetBaud( SDhispdBaud );
+    // dump data
+    // restore original baudrate
+    //SDsetBaud( SDdefBaud );
+}
+void cmdCalibrate1()
+{
+    // perform a calibration
+    // which is to remember quaternions at current position
+
+    // in case something goes wrong, give them 10 attempts
+    for (uint8_t i = 0; i < 10; i++)
+    {
+      uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus); // reading clears the register
+
+      // Check for errors
+      if (eventStatus & 0x02)
+      {
+        DEBUG.print("CMD: error occured while calibration: ");
+        DEBUG.println(eventStatus);
+        DEBUG.println("CMD: Trying again...");
+      }
+
+      if (eventStatus & 0x04) // new quaternions available
+      {
+        // if there is quaternion data, read it, store it and exit loop
+        readSENtralQuatData(refQuat1);
+        float refQuat1Conj[4];
+        quatConj(refQuat1, refQuat1Conj);
+
+        float norm = quatNorm(refQuat1Conj);
+        refQuat1Inv[0] = refQuat1Conj[0] / norm;
+        refQuat1Inv[1] = refQuat1Conj[1] / norm;
+        refQuat1Inv[2] = refQuat1Conj[2] / norm;
+        refQuat1Inv[3] = refQuat1Conj[3] / norm;
+        DEBUG.println("CMD: saved calibrated data 1");
+        DEBUG.print(refQuat1[0]);
+        DEBUG.print(" ");
+        DEBUG.print(refQuat1[1]);
+        DEBUG.print(" ");
+        DEBUG.print(refQuat1[2]);
+        DEBUG.print(" ");
+        DEBUG.println(refQuat1[3]);
+
+        SDserial.print("C1 ");
+        SDserial.print(millis());
+        SDserial.print(" ");
+        SDserial.print(refQuat1[0]);
+        SDserial.print(" ");
+        SDserial.print(refQuat1[1]);
+        SDserial.print(" ");
+        SDserial.print(refQuat1[2]);
+        SDserial.print(" ");
+        SDserial.println(refQuat1[3]);
+        SDserial.flush();
+
+        // since we set new variable,
+        SessionSet &= ~SESSION_EEPROMED;
+        SessionSet |= SESSION_CALIBRATED1;
+        // exit the loop
+        break;
+      }
+      delay(250);
+    }
+
+}
+void cmdCalibrate2()
+{
+    // perform a calibration
+    // which is to remember quaternions at current position
+
+    // in case something goes wrong, give them 10 attempts
+    for (uint8_t i = 0; i < 10; i++)
+    {
+      uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus); // reading clears the register
+
+      // Check for errors
+      if (eventStatus & 0x02)
+      {
+        DEBUG.print("CMD: error occured while calibration: ");
+        DEBUG.println(eventStatus);
+        DEBUG.println("CMD: Trying again...");
+      }
+
+      if (eventStatus & 0x04) // new quaternions available
+      {
+        // if there is quaternion data, read it, store it and exit loop
+        readSENtralQuatData(refQuat2);
+        float refQuat2Conj[4];
+        quatConj(refQuat2, refQuat2Conj);
+
+        float norm = quatNorm(refQuat2Conj);
+        refQuat2Inv[0] = refQuat2Conj[0] / norm;
+        refQuat2Inv[1] = refQuat2Conj[1] / norm;
+        refQuat2Inv[2] = refQuat2Conj[2] / norm;
+        refQuat2Inv[3] = refQuat2Conj[3] / norm;
+        DEBUG.println("CMD: saved calibrated data 2");
+        DEBUG.print(refQuat2[0]);
+        DEBUG.print(" ");
+        DEBUG.print(refQuat2[1]);
+        DEBUG.print(" ");
+        DEBUG.print(refQuat2[2]);
+        DEBUG.print(" ");
+        DEBUG.println(refQuat2[3]);
+
+        SDserial.print("C2 ");
+        SDserial.print(millis());
+        SDserial.print(" ");
+        SDserial.print(refQuat2[0]);
+        SDserial.print(" ");
+        SDserial.print(refQuat2[1]);
+        SDserial.print(" ");
+        SDserial.print(refQuat2[2]);
+        SDserial.print(" ");
+        SDserial.println(refQuat2[3]);
+        SDserial.flush();
+
+        // since we set new variable,
+        SessionSet &= ~SESSION_EEPROMED;
+        SessionSet |= SESSION_CALIBRATED2;
+        // exit the loop
+        break;
+      }
+      delay(250);
+    }
+}
+void cmdSelfTest()
+{
+    // perform auto-test
+    float dev[6];
+    MPU9250SelfTest(dev);
+    DEBUG.print("CMD: Self-test results: ");
+
+    boolean testPassed = true;
+    for (uint8_t i = 0; i < 6; i++)
+    {
+      if (dev[i] > 0.14f || dev[i] < -0.14f) testPassed = false;
+      DEBUG.print(dev[i] * 100); DEBUG.print("%, ");
+    }
+
+    if (testPassed)
+      DEBUG.println("Self test passed");
+    else
+      DEBUG.println("Self test failed");
+
+}
+void cmdSetBaudrate(String* args, uint8_t argn)
+{
+    // set the serial port baudrate. Might be useful
+    // when downloading larger chunk of data
+    if (argn < 1) {
+      DEBUG.println("CMD: no baudrate specified");
+      return;
+    }
+    DEBUG.flush();
+
+    uint32_t baudrate = (args[0]).toInt();
+    if(baudrate == 0) 
+    {
+      DEBUG.begin(9600);
+    
+      DEBUG.println("CMD: invalid baudrate");
+      return;
+    }
+    DEBUG.end();
+    DEBUG.begin(baudrate);
+    delay(1000);
+    DEBUG.println("CMD: new baudrate set");
+}
 /**
    Read command incoming on DEBUG stream and take an action
 */
@@ -57,228 +421,53 @@ void readCmd()
   }
 
   // Now actually determine which command was that
-
   if (cmd.equals("setTime"))
   {
-    // synchronize RTC clock by providing data as dd/mm/yyyy
-    if (argn < 2) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    // parse HH:mm:ss and dd/mm/yyyy to timestamp
-    // and synchronize RTC
-
+    cmdSetTime(args, argn);
   }
   else if (cmd.equals("setTimestamp"))
   {
-    // syncrhonize RTC clock by providing data as a timestamp
-    if (argn < 1) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    // synchronize RTC
-    uint32_t stamp = (args[0]).toInt();
-    syncRTC((time_t) stamp); 
-    DEBUG.println("CMD: new timestamp set");
-
+    cmdSetTimestamp(args, argn);
   }
   else if (cmd.equals("returnTimestamp"))
   {
-    // display timestamp back
-    DEBUG.print("CMD: current time ");
-    DEBUG.println(now());
+    cmdReturnTimestamp();
   }
   else if (cmd.equals("returnTime"))
   {
-    // return current time in nice format
-    DEBUG.print("CMD: current time ");
-    DEBUG.print(hour());
-    DEBUG.print(":");
-    DEBUG.print(minute());
-    DEBUG.print(":");
-    DEBUG.print(second());
-    DEBUG.print(" ");
-    DEBUG.print(day());
-    DEBUG.print("/");
-    DEBUG.print(month());
-    DEBUG.print("/");
-    DEBUG.println(year());
+    cmdReturnTime();
   }
   else if (cmd.equals("setSessionName"))
   {
-    if (argn < 1) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    // set the name/id of current measurement so it's easier to find on sd disk
-    SessionName = args[0];
-    SessionSet &= ~SESSION_EEPROMED;
-
-    SDappend(SessionName);
-    SDserial.print("I ");
-    SDserial.print(millis());
-    SDserial.print(" ");
-    SDserial.println(SessionName);
-
-
-    DEBUG.print("CMD: new session name: ");
-    DEBUG.println(SessionName);
+    cmdSetSessionName(args, argn);
   }
   else if (cmd.equals("setAlarmLevel"))
   {
-    if (argn < 1) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    // set level of the alarm
-    alarmLevel = (args[0]).toFloat();
-    SessionSet &= ~SESSION_EEPROMED;
-    DEBUG.print("CMD: new alarm level: ");
-    DEBUG.println(alarmLevel);
+    cmdSetAlarmLevel(args, argn);
   }
   else if (cmd.equals("setAlarmEnabled"))
   {
-    if (argn < 1) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    if ( (args[0]).equals("true") )
-    {
-      SessionSet |= SESSION_ALARM_EN;
-      DEBUG.print("CMD: alarm enabled");
-    } 
-    else 
-    {
-      SessionSet &= ~SESSION_ALARM_EN;
-      DEBUG.print("CMD: alarm disabled");
-    }
+    cmdSetAlarmEnabled(args, argn);
   }
   else if (cmd.equals("setPoolingPeriod"))
   {
-    if (argn < 1) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    // set level of the alarm
-    poolingPeriod = (args[0]).toInt();
-    SessionSet &= ~SESSION_EEPROMED;
-    SessionSet |= ~SESSION_POOLING_SET;
-    DEBUG.print("CMD: new pooling period: ");
-    DEBUG.println(poolingPeriod);
+    cmdSetPoolingPeriod(args, argn);
   }
   else if (cmd.equals("save"))
   {
-
-    // save session name
-    struct {
-      char n[9];
-    } sessname;
-    SessionName.toCharArray(sessname.n, 9);
-    sessname.n[8] = 0;
-    EEPROM.put(SESS_SESSION_NAME_ADDR, sessname);
-
-    // save reference quaternions
-    EEPROM.put(SESS_INIT_Q1_ADDR, refQuat[0]);
-    EEPROM.put(SESS_INIT_Q2_ADDR, refQuat[1]);
-    EEPROM.put(SESS_INIT_Q3_ADDR, refQuat[2]);
-    EEPROM.put(SESS_INIT_Q4_ADDR, refQuat[3]);
-
-    // save alarm level
-    EEPROM.put(SESS_ALARM_LEVEL_ADDR, alarmLevel);
-    
-    // save pooling period
-    EEPROM.put(SESS_POOLING_ADDR, poolingPeriod);
-
-    // save flags
-    EEPROM.put(SESS_ON_ADDR, SESS_ON | SESS_NAME_SET | SESS_CALIBRATED | SESS_ALARM_SET | SESS_POOLING_SET);
-
-    SessionSet |= SESSION_EEPROMED;
-    DEBUG.println("CMD: session saved to EEPROM");
+    cmdSave();
   }
   else if (cmd.equals("dump"))
   {
-    // Just dump all the data from measurement into a DEBUG stream
-    if (argn < 1) {
-      DEBUG.println("CMD: Not enough arguments");
-      return;
-    }
-    if (argn == 3) {
-      uint32_t start = (args[1]).toInt();
-      uint32_t stop = (args[2]).toInt();
-      SDdump2(args[0], start, stop);
-      return;
-    } 
-    else 
-    {
-      SDdump(args[0]);
-    }
-    
-    // set hi speed baudrate to receive loads of data
-    //SDsetBaud( SDhispdBaud );
-    // dump data
-    // restore original baudrate
-    //SDsetBaud( SDdefBaud );
+    cmdDump(args, argn);
   }
-  else if (cmd.equals("calibrate"))
+  else if (cmd.equals("calibrate1"))
   {
-    // perform a calibration
-    // which is to remember quaternions at current position
-
-    // in case something goes wrong, give them 10 attempts
-    for (uint8_t i = 0; i < 10; i++)
-    {
-      uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus); // reading clears the register
-
-      // Check for errors
-      if (eventStatus & 0x02)
-      {
-        DEBUG.print("CMD: error occured while calibration: ");
-        DEBUG.println(eventStatus);
-        DEBUG.println("CMD: Trying again...");
-      }
-
-      if (eventStatus & 0x04) // new quaternions available
-      {
-        // if there is quaternion data, read it, store it and exit loop
-        readSENtralQuatData(refQuat);
-        float refQuatConj[4];
-        quatConj(refQuat, refQuatConj);
-
-        float norm = quatNorm(refQuatConj);
-        refQuatInv[0] = refQuatConj[0] / norm;
-        refQuatInv[1] = refQuatConj[1] / norm;
-        refQuatInv[2] = refQuatConj[2] / norm;
-        refQuatInv[3] = refQuatConj[3] / norm;
-        DEBUG.println("CMD: saved calibrated data");
-        DEBUG.print(refQuat[0]);
-        DEBUG.print(" ");
-        DEBUG.print(refQuat[1]);
-        DEBUG.print(" ");
-        DEBUG.print(refQuat[2]);
-        DEBUG.print(" ");
-        DEBUG.println(refQuat[3]);
-
-        SDserial.print("C ");
-        SDserial.print(millis());
-        SDserial.print(" ");
-        SDserial.print(refQuat[0]);
-        SDserial.print(" ");
-        SDserial.print(refQuat[1]);
-        SDserial.print(" ");
-        SDserial.print(refQuat[2]);
-        SDserial.print(" ");
-        SDserial.println(refQuat[3]);
-        SDserial.flush();
-
-        // since we set new variable,
-        SessionSet &= ~SESSION_EEPROMED;
-        SessionSet |= SESSION_CALIBRATED;
-        // exit the loop
-        break;
-      }
-      delay(250);
-    }
-
+    cmdCalibrate1();
+  }
+  else if (cmd.equals("calibrate2"))
+  {
+    cmdCalibrate2();
   }
   else if (cmd.equals("list"))
   {
@@ -292,51 +481,20 @@ void readCmd()
   }
   else if (cmd.equals("start"))
   {
-    // if all was set or it's second time we ask for start
-    if (SessionSet & (SESSION_NAME_SET | SESSION_ALARM_SET | SESSION_CALIBRATED) || SessionSet & SESSION_FORCED)
-    {
-      // start measurement
-      doRun = true;
-      DEBUG.println("CMD: measurement start");
-    }
-    else
-    {
-      DEBUG.println("CMD: name/alarm/calibration not set yet, type start to proceed or set missing properties");
-      SessionSet |= SESSION_FORCED;
-    }
+    cmdStart();
   }
   else if (cmd.equals("stop"))
   {
     // stop measurement
-    doRun = false;
-    DEBUG.println("CMD: measurement stop");
+    cmdStop();
   }
   else if (cmd.equals("selftest"))
   {
-    // perform auto-test
-    float dev[6];
-    MPU9250SelfTest(dev);
-    DEBUG.print("CMD: Self-test results: ");
-
-    boolean testPassed = true;
-    for (uint8_t i = 0; i < 6; i++)
-    {
-      if (dev[i] > 0.14f || dev[i] < -0.14f) testPassed = false;
-      DEBUG.print(dev[i] * 100); DEBUG.print("%, ");
-    }
-
-    if (testPassed)
-      DEBUG.println("Self test passed");
-    else
-      DEBUG.println("Self test failed");
-
+    cmdSelfTest();
   }
   else if (cmd.equals("forget"))
   {
-    // forget the session so during next reset it will start from scratch
-    doRun = false;
-    EEPROM.write(SESS_ON_ADDR, 0x00);
-    DEBUG.println("CMD: session forgotten");
+    cmdForget();
   }
   else if (cmd.equals("reset"))
   {
@@ -346,26 +504,7 @@ void readCmd()
   }
   else if (cmd.equals("setBaudrate"))
   {
-    // set the serial port baudrate. Might be useful
-    // when downloading larger chunk of data
-    if (argn < 1) {
-      DEBUG.println("CMD: no baudrate specified");
-      return;
-    }
-    DEBUG.flush();
-
-    uint32_t baudrate = (args[0]).toInt();
-    if(baudrate == 0) 
-    {
-      DEBUG.begin(9600);
-    
-      DEBUG.println("CMD: invalid baudrate");
-      return;
-    }
-    DEBUG.end();
-    DEBUG.begin(baudrate);
-    delay(1000);
-    DEBUG.println("CMD: new baudrate set");
+    cmdSetBaudrate(args, argn);
   }
   else
   {
