@@ -1,15 +1,44 @@
-1	Implement functions on teensy side for
-	a	clearing sd
+Top priority: working, reliable, accurate prototype in plastic case.
 
-2	Replace openlog with something normal like just a SD card
+9	Review quaternions/pitches/rolls, as device head-mounted on patients temple eg pitch needs to reflect this (priority 1). Also having a yaw output would be nice.
 
-3	Get RTC to work
+2	Replace openlog with something normal like just a SD card (priority 1)
 
-4	Get Buzzer to work finally
+5	Verify accuracy of the device measurement (priority 1)
 
-5	Verify accuracy of the device measurement
-
-6	Find out if selftest result is anyhow our concern
-
-7	Of great use would a button to turn on/off actually the device completly. 
+7	Of great use would a button to turn on/off actually the device completly. (priority 1) 
         For instance something like 40mA capable switch between Battery Manager output to VIN to Teensy.
+
+Secondary priority
+
+4	Get Buzzer to work finally (priority 2)
+
+Tertiary priority
+
+6	Find out if selftest result is anyhow our concern (priority 3)
+
+3	Get real time clock (RTC) to work (priority 3)
+
+8	For the 3dprinted holster and assembly, these should be fixed: (priority 3)
+	1) I didn't spend much time thinking how to guide wires between pcb, right now it's mess. 
+   	They must be carried in much smarter manner.
+   
+	2) Battery Managment PCB has wires soldered after putting into place, that is not good. (priority 2)
+  	If you solder before putting, then it's not possible to slide it into slot.
+   	Either change PCB design or change holster design to resolve that.
+
+	3) Distance between two parallel pcb's can be reduced. (priority 3)
+
+	4) In general 3d printing on Zortrax gives quite solid and durable forms, so all walls/beams (priority 3)
+	   /supports can be thinned a bit to save on space
+
+	5) Notch for PCB's is perhaps too deep. PCB solder points are not exposed that well because of them (priority 3)
+
+	7) Wires are way to dangly (priority 3)
+
+	8) Perhaps it would be nice to house battery connector (priority 3)
+
+
+
+Other
+	6) It's missing place to put a button
