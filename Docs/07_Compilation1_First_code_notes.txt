@@ -50,8 +50,8 @@ request a command from the device. Command should end with a newline.
     calibrate
     Force device to set current level as a reference level
 
-    rm [filename]
-    removes fiven file
+    delete [filename]
+    removes given file, wildcards supported
 
     autotest
     Perform auto-test on the sensor
@@ -86,11 +86,10 @@ request a command from the device. Command should end with a newline.
     Therefore nice and valid sequnence to start a measurement would be:
     1   forget    // just in a case start over
     2   setSessionName SESSNAME
-    3   setAlarmLevel  LEVEL
-    4   setTime dd-mm-yyyy hh:mm:ss
-    5   calibrate
-    6   save
-    7   start
+    3   calibrate1
+    4   calibrate2
+    5   save
+    6   start
     Such sequence will create really nice and sweet output.
     
     On the other hand we can always just go with

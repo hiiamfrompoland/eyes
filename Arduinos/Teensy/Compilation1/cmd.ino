@@ -199,6 +199,15 @@ void cmdDump(String* args, uint8_t argn)
     // restore original baudrate
     //SDsetBaud( SDdefBaud );
 }
+void cmdDelete(String* args, uint8_t argn)
+{
+    // Just dump all the data from measurement into a DEBUG stream
+    if (argn < 1) {
+      DEBUG.println("CMD: Not enough arguments");
+      return;
+    }
+    SDrm(args[0]);
+}
 void cmdCalibrate1()
 {
     // perform a calibration
@@ -478,6 +487,11 @@ void readCmd()
   {
     // remove everything but config from SD card
 
+  }
+  else if (cmd.equals("delete"))
+  {
+    // remove everything but config from SD card
+    cmdDelete(args, argn);
   }
   else if (cmd.equals("start"))
   {

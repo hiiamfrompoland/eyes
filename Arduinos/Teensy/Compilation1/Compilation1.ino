@@ -528,10 +528,10 @@ void loop() {
     readSENtralQuatData(rawQuat);
 
     // if there is reference quaternion, do stuff
-    if (SessionSet & SESSION_CALIBRATED1 & SESSION_CALIBRATED2)
+    if ((SessionSet & SESSION_CALIBRATED1) && (SessionSet &  SESSION_CALIBRATED2))
     {
       // substract reference quaternion to find relative quaternion
-      quatProd(refQuat2Inv, rawQuat, Quat);
+      //quatProd(refQuat2Inv, rawQuat, Quat);
       quatProd(refQuat1Inv, rawQuat, Quat);
       // alarm level detection
     }
@@ -549,6 +549,7 @@ void loop() {
   float pitch = -asin(2.0f * (Quat[0] * Quat[2] - Quat[3] * Quat[1])) * 180.0f / 3.14f;
   float yaw  = atan2(2.0f * (Quat[0] * Quat[1] + Quat[2] * Quat[3]), Quat[0] * Quat[0] - Quat[1] * Quat[1] - Quat[2] * Quat[2] + Quat[3] * Quat[3]) * 180.0f / 3.14f;
   float roll = atan2(2.0f * (Quat[1] * Quat[2] + Quat[0] * Quat[3]), Quat[0] * Quat[0] + Quat[1] * Quat[1] - Quat[2] * Quat[2] - Quat[3] * Quat[3]) * 180.0f / 3.14f;   
+  
   // if alarm anabled, do alarm stuff
   if(SessionSet & SESSION_ALARM_EN)
   {

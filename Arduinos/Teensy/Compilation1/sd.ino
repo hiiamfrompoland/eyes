@@ -144,7 +144,30 @@ void SDlist()
   // quit command mode
   SDcmdQuit();
 }
+/**
+   Enter command mode on SDcard
+*/
+void SDrm(String filename)
+{
+  char c;
 
+  SDcmd(true);
+  SDserial.print("rm ");
+  SDserial.print(filename);
+  SDserial.print("\r");
+
+  DEBUG.println("CMD: removing file");
+  while (!SDserial.available());
+  while ((c = SDserial.read()) != '>')
+  {
+    DEBUG.write(c);
+    while (!SDserial.available());
+  }
+  DEBUG.flush();
+
+  // quit command mode
+  SDcmdQuit();
+}
 /**
    Dump data to stream
 */
